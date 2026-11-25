@@ -1,0 +1,11 @@
+# Java compiled artifacts
+*.class
+out/
+
+# Generated application packages
+*.jar
+*.war
+
+# IDE files
+.idea/
+.vscode/
