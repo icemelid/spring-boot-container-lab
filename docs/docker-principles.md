@@ -134,19 +134,64 @@ The container lifecycle is therefore directly tied to the lifecycle of its main 
 
 ## 8. Runtime Configuration
 
-The application reads its environment configuration through the `APP_ENV` variable.
+The application supports external configuration through environment variables.
 
-When no explicit value is provided, the application uses `development` as its default.
+The `APP_ENV` variable determines the runtime environment. If no explicit value is supplied, the application uses `development` as its default.
 
-The same application was also executed with an alternative environment value:
+### 8.1 Application-Level Configuration
+
+The environment variable can be defined when executing the Java application directly:
 
 ```bash
 APP_ENV=container-test java -cp out com.lab.docker.DockerHelloApp
 ```
 
-This demonstrates configuration through environment variables without modifying application source code.
+### 8.2 Container-Level Configuration
 
-The next stage will verify the same configuration mechanism directly through Docker.
+Docker allows environment variables to be supplied at container startup using the `-e` option.
+
+```bash
+docker run --rm -e APP_ENV=production --name docker-hello-prod docker-hello:1.0
+```
+
+The application receives `APP_ENV=production` without requiring changes to its source code or a new image build.
+
+**Command parameters**
+
+| Parameter | Description |
+|---|---|
+| `--rm` | Automatically removes the container after it exits. |
+| `-e APP_ENV=production` | Defines the environment variable for the container process. |
+| `--name docker-hello-prod` | Assigns a unique name to the container. |
+| `docker-hello:1.0` | Specifies the image used to create the container. |
+
+### 8.3 Image Reusability Across Environments
+
+The same Docker image can be deployed across different environments by supplying different runtime configuration values.
+
+| Container | Image | APP_ENV |
+|---|---|---|
+| `docker-hello-dev` | `docker-hello:1.0` | `development` |
+| `docker-hello-test` | `docker-hello:1.0` | `testing` |
+| `docker-hello-prod` | `docker-hello:1.0` | `production` |
+
+This approach separates application packaging from environment-specific configuration.
+
+**Key engineering principle:** build the application image once and promote the same immutable artifact across environments, injecting the appropriate configuration at runtime.
+
+This improves deployment consistency and avoids maintaining separate images for development, testing and production.
+
+### 8.4 Configuration Precedence
+
+The Dockerfile defines a default value:
+
+```dockerfile
+ENV APP_ENV=development
+```
+
+A value supplied through `docker run -e` overrides that default for the individual container.
+
+This allows runtime configuration to take precedence over image-level defaults without rebuilding the image.
 
 ## 9. Current Implementation Status
 
